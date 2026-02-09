@@ -16,7 +16,15 @@ const contents = {
 
 const SHELL_CHARS = [`$`, `#`];
 
-async function convertToUTF8WithCCSID(connection: IBMi, text: string, baseCcsid: string, intermediateCcsid: string): Promise<string> {
+async function convertToUtf8WithDates(connection: IBMi, text: string, baseCcsid: number, intermediateCcsid: number): Promise<string> {
+  return convertToUtf8(connection, text, baseCcsid, intermediateCcsid, true);
+}
+
+async function convertToUtf8WithoutDates(connection: IBMi, text: string, baseCcsid: number, intermediateCcsid: number): Promise<string> {
+  return convertToUtf8(connection, text, baseCcsid, intermediateCcsid, false);
+}
+
+async function convertToUtf8(connection: IBMi, text: string, baseCcsid: number, intermediateCcsid: number, withSourceDates: boolean): Promise<string> {
   const content = connection.getContent();
   const config = connection.getConfig();
 
@@ -24,9 +32,10 @@ async function convertToUTF8WithCCSID(connection: IBMi, text: string, baseCcsid:
   const tempSPF = Tools.makeid(8);
   const tempMbr = Tools.makeid(4);
 
+  config.enableSourceDates = withSourceDates;
   config.ccsidConversionEnabled = true;
-  config.ccsidConvertFrom = baseCcsid;
-  config.ccsidConvertTo = intermediateCcsid;
+  config.ccsidConvertFrom = baseCcsid.toString();
+  config.ccsidConvertTo = intermediateCcsid.toString();
 
   const createResult = await connection!.runCommand({
     command: `CRTSRCPF ${tempLib}/${tempSPF} MBR(${tempMbr}) CCSID(${baseCcsid})`,
@@ -414,10 +423,10 @@ describe('BiDi encoding tests', () => {
   }, CONNECTION_TIMEOUT);
 
   // test data
-  const BidiContents = {
+  const bidiContents = {
     "420": {
-      compatCcsid: "8612",
-      incompatCcsid: "273",
+      compatCcsid: 8612,
+      incompatCcsid: 273,
       text: [
         "مرحبا بالعالم",
         "Welcome to البرمجة",
@@ -426,8 +435,8 @@ describe('BiDi encoding tests', () => {
       ],
     },
     "424": {
-      compatCcsid: "62211",
-      incompatCcsid: "273",
+      compatCcsid: 62211,
+      incompatCcsid: 273,
       text: [
         "שלום עולם",
         "English and Hebrew - עברית",
@@ -437,21 +446,31 @@ describe('BiDi encoding tests', () => {
     },
   };
 
-  const bidiEntries = Object.entries(BidiContents);
+  const bidiEntries = Object.entries(bidiContents);
 
+  // testing valid conversion
   bidiEntries.forEach(([baseCcsid, bidiContent]) => {
-    it(`Valid conversion of CCSID ${baseCcsid} to UTF8`, async () => {
+    it(`Valid conversion of CCSID ${baseCcsid} to Utf-8`, async () => {
       const baseContent = bidiContent.text.join("\r\n") + "\r\n";
-      const converted = await convertToUTF8WithCCSID(connection, baseContent, baseCcsid, bidiContent.compatCcsid);
-      expect(converted).toBe(baseContent);
+
+      const withDates = await convertToUtf8WithDates(connection, baseContent, Number(baseCcsid), bidiContent.compatCcsid);
+      expect(withDates, "expected a valid conversion of member WITH source dates").toBe(baseContent);
+
+      const withoutDates = await convertToUtf8WithoutDates(connection, baseContent, Number(baseCcsid), bidiContent.compatCcsid);
+      expect(withoutDates, "expected a valid conversion of member WITHOUT source dates").toBe(baseContent);
     });
   });
 
-  bidiEntries.forEach(([baseCcsid, bidiContent]) => {
-    it(`invalid conversion of CCSID ${baseCcsid} to UTF8`, async () => {
-      const baseContent = bidiContent.text.join("\r\n") + "\r\n";
-      const converted = await convertToUTF8WithCCSID(connection, baseContent, baseCcsid, bidiContent.incompatCcsid);
-      expect(converted).not.toBe(baseContent);
+  // testing invalid conversion
+  bidiEntries.forEach(([baseCcsid, cvtContent]) => {
+    it(`Invalid conversion of CCSID ${baseCcsid} to Utf-8`, async () => {
+      const baseContent = cvtContent.text.join("\r\n") + "\r\n";
+
+      const withDates = await convertToUtf8WithDates(connection, baseContent, Number(baseCcsid), cvtContent.incompatCcsid);
+      expect(withDates, "expected an invalid conversion of member WITH source dates").not.toBe(baseContent);
+
+      const withoutDates = await convertToUtf8WithoutDates(connection, baseContent, Number(baseCcsid), cvtContent.incompatCcsid);
+      expect(withoutDates, "expected an invalid conversion of member WITHOUT source dates").not.toBe(baseContent);
     });
   });
 });
