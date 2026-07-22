@@ -230,6 +230,17 @@
 								"default": false,
 								"description": "When enabled along with enableSourceDates, Code for IBM i will display the source date in the gutter of source members."
 							},
+							"sourceBidiMode": {
+								"type": "string",
+								"default": "off",
+								"enum": [
+									"off",
+									"auto",
+									"hebrewVisual",
+									"hebrewLogical"
+								],
+								"description": "Experimental BiDi handling for source members with source dates. Off keeps existing behavior. Hebrew visual uses IBM i BiDi-sensitive conversion for Hebrew source display and save round-trips."
+							},
 							"encodingFor5250": {
 								"type": "string",
 								"default": "default",

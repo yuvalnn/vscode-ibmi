@@ -3,6 +3,7 @@ import { ConnectionData, DeploymentMethod } from "../../types";
 
 export type DefaultOpenMode = "browse" | "edit";
 export type ReconnectMode = "always" | "never" | "ask";
+export type SourceBidiMode = "off" | "auto" | "hebrewVisual" | "hebrewLogical";
 
 export interface ConnectionConfig extends ConnectionProfile {
   host: string;
@@ -16,6 +17,7 @@ export interface ConnectionConfig extends ConnectionProfile {
   hideCompileErrors: string[];
   enableSourceDates: boolean;
   sourceDateGutter: boolean;
+  sourceBidiMode: SourceBidiMode;
   ccsidConversionEnabled: boolean;
   ccsidConvertFrom: string;
   ccsidConvertTo: string;

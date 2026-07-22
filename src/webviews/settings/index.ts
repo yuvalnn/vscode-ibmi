@@ -180,6 +180,12 @@ export class SettingsUI {
           .addHorizontalRule()
           .addCheckbox(`enableSourceDates`, `Enable Source Dates`, `When enabled, source dates will be retained and updated when editing source members. Requires restart when changed.`, config.enableSourceDates)
           .addCheckbox(`sourceDateGutter`, `Source Dates in Gutter`, `When enabled, source dates will be displayed in the gutter. This also enables date search and sequence view.`, config.sourceDateGutter)
+          .addSelect(`sourceBidiMode`, `Source BiDi Mode`, [
+            { value: `off`, text: `Off`, description: `Existing behavior`, selected: config.sourceBidiMode === `off` },
+            { value: `auto`, text: `Auto`, description: `Reserved for future automatic selection`, selected: config.sourceBidiMode === `auto` },
+            { value: `hebrewVisual`, text: `Hebrew visual`, description: `Experimental CCSID 424 visual source handling`, selected: config.sourceBidiMode === `hebrewVisual` },
+            { value: `hebrewLogical`, text: `Hebrew logical`, description: `Reserved for logical Hebrew source handling`, selected: config.sourceBidiMode === `hebrewLogical` },
+          ], `Experimental. Applies only to source-date member read/write paths.`)
           .addHorizontalRule()
           .addSelect(`defaultDeploymentMethod`, `Default Deployment Method`, [
             {

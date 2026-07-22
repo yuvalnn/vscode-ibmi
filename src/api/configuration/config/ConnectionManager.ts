@@ -25,6 +25,7 @@ function initialize(parameters: Partial<ConnectionConfig>): ConnectionConfig {
     hideCompileErrors: parameters.hideCompileErrors || [],
     enableSourceDates: parameters.enableSourceDates === true,
     sourceDateGutter: parameters.sourceDateGutter === true,
+    sourceBidiMode: parameters.sourceBidiMode || `off`,
     encodingFor5250: parameters.encodingFor5250 || `default`,
     terminalFor5250: parameters.terminalFor5250 || `default`,
     setDeviceNameFor5250: (parameters.setDeviceNameFor5250 === true),
