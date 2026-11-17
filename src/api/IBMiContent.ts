@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import * as node_ssh from "node-ssh";
@@ -1170,7 +1171,7 @@ export default class IBMiContent {
    */
   async getSQLRoutineSignature(library: string, name: string, type: "PROCEDURE" | "FUNCTION") {
     const [row] = await this.ibmi.runSQL(/* sql */`
-      select ROUTINE_BODY, EXTERNAL_NAME, HASH_SHA256(ROUTINEDEF) SIGNATURE
+      select ROUTINE_BODY, EXTERNAL_NAME, ROUTINEDEF
       from QSYS2.SYSROUTINES
       where ROUTINE_TYPE = '${type}' and
             RTNSCHEMA = '${library}' and
@@ -1180,8 +1181,8 @@ export default class IBMiContent {
     if (row?.ROUTINE_BODY === "EXTERNAL") {
       return row.EXTERNAL_NAME as string
     }
-    else if (row?.SIGNATURE) {
-      return row.SIGNATURE as string;
+    else if (row?.ROUTINEDEF) {
+      return crypto.createHash('sha256').update(row.ROUTINEDEF as string).digest('hex').toUpperCase();
     }
   }
 
